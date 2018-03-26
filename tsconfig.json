@@ -8,7 +8,6 @@
     "outDir": "./dist",                        /* Redirect output structure to the directory. */
     "rootDir": "./src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     "removeComments": true,                /* Do not emit comments to output. */
-    "exclude": [ "node_modules", "**/*.spec.ts" ],
     "newLine": "LF",
 
     /* Strict Type-Checking Options */
@@ -22,5 +21,6 @@
 
     /* Experimental Options */
     "experimentalDecorators": true        /* Enables experimental support for ES7 decorators. */
-  }
+  },
+  "exclude": [ "node_modules", "**/*.spec.ts" ]
 }
