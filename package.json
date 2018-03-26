@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && npm run lint && tsc",
     "clean": "del-cli dist/* !.gitignore",
-    "lint": "tslint --format stylish 'src/**/*.ts'",
+    "lint": "tslint --format stylish --project .",
     "postinstall": "postinstall-build dist"
   },
   "author": "Mossuru777",
