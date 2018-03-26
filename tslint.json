@@ -1,8 +1,5 @@
 {
   "extends": "tslint-config-airbnb",
-  "linterOptions": {
-    "typeCheck": true
-  },
   "rules": {
     "align": [true, "parameters", "statements"],
     "max-line-length": [true, 120],
