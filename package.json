@@ -4,12 +4,15 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "lint": "tslint --format stylish 'src/**/*.ts'",
     "postinstall": "postinstall-build dist"
   },
   "author": "Mossuru777",
   "license": "ISC",
   "private": true,
   "devDependencies": {
+    "tslint": "^5.9.1",
+    "tslint-config-airbnb": "^5.8.0",
     "typescript": "^2.7.2"
   },
   "dependencies": {
