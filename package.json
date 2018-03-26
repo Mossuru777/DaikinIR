@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && npm run lint && tsc",
+    "clean": "del-cli dist/* !.gitignore",
     "lint": "tslint --format stylish 'src/**/*.ts'",
     "postinstall": "postinstall-build dist"
   },
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@types/node": "^8.10.0",
+    "del-cli": "^1.1.0",
     "postinstall-build": "^5.0.1"
   }
 }
