@@ -11,13 +11,17 @@ export class DaikinIRCommand {
     private static readonly IR_PKG_START = "25000";
     private static readonly IR_FRAME_START = "35000";
 
-    // LIRC private static readonlyants
+    // LIRC private static constants
+    private static readonly LIRC_MAX_COMMANDS = 5;
     private static readonly LIRC_INDENT_SPACE = "    ";
     private static readonly LIRC_COMMAND_BEGINNING_SPACE = "  ";
     private static readonly LIRC_COMMAND_SPACE = "    ";
     private static readonly LIRC_FRAME_START = [
         DaikinIRCommand.IR_FRAME_SEPARATOR_PULSE,
         DaikinIRCommand.IR_FRAME_SEPARATOR_SPACE
+    ];
+    private static readonly LIRC_FRAME_END = [
+        DaikinIRCommand.IR_FRAME_SEPARATOR_PULSE
     ];
     private static readonly LIRC_PKG_START = [
         DaikinIRCommand.IR_SEPARATOR_PULSE,
@@ -63,20 +67,22 @@ export class DaikinIRCommand {
         [command2, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[1], row_issued_count, false);
         [command3, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[2], row_issued_count, false);
 
-        return `
-begin remote
+        let end_command: string;
+        [end_command, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands([
+            DaikinIRCommand.LIRC_FRAME_END
+        ], row_issued_count);
+
+        return `begin remote
 ${DaikinIRCommand.LIRC_INDENT_SPACE}name  AirCon
 ${DaikinIRCommand.LIRC_INDENT_SPACE}flags RAW_CODES
 ${DaikinIRCommand.LIRC_INDENT_SPACE}eps 30
 ${DaikinIRCommand.LIRC_INDENT_SPACE}aeps 100
 ${DaikinIRCommand.LIRC_INDENT_SPACE}gap 34978
-
 ${DaikinIRCommand.LIRC_INDENT_SPACE}begin raw_codes
 ${DaikinIRCommand.LIRC_INDENT_SPACE}${DaikinIRCommand.LIRC_INDENT_SPACE}name Control
-${begin_command}${command1}${command2}${command3}
+${begin_command}${command1}${command2}${command3}${end_command}
 ${DaikinIRCommand.LIRC_INDENT_SPACE}end raw_codes
-end remote
-`;
+end remote`;
     }
 
     private static buildLIRCCommandFromIssueCommands(issue_commands: string[][],
@@ -86,8 +92,8 @@ end remote
         for (let i = 0; i < issue_commands.length; i += 1) {
             for (let j = 0; j < issue_commands[i].length; j += 1) {
                 let space = DaikinIRCommand.LIRC_COMMAND_SPACE;
-                if (current_row_issued_count === -1 || current_row_issued_count === 3) {
-                    if (current_row_issued_count === 3) {
+                if (current_row_issued_count === -1 || current_row_issued_count === DaikinIRCommand.LIRC_MAX_COMMANDS) {
+                    if (current_row_issued_count === DaikinIRCommand.LIRC_MAX_COMMANDS) {
                         command += "\n";
                     }
                     space = DaikinIRCommand.LIRC_INDENT_SPACE + DaikinIRCommand.LIRC_INDENT_SPACE
