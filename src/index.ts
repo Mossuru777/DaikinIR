@@ -1,3 +1,10 @@
+/*
+    References
+
+    http://web.archive.org/web/20170107154250/http://rdlab.cdmt.vn/project-2013/daikin-ir-protocol
+    https://github.com/blafois/Daikin-IR-Reverse
+ */
+
 import { sprintf } from "sprintf-js";
 import { Power, Mode, FanSpeed, Swing, TimerMode } from "./conf_enums";
 
@@ -43,7 +50,7 @@ export class DaikinIRCommand {
     readonly off_timer: number;
     readonly on_timer: number;
 
-    constructor(readonly power: Power, readonly mode: Mode, readonly degree: number,
+    constructor(readonly power: Power, readonly mode: Mode, readonly temperature: number,
                 readonly fan_speed: FanSpeed, readonly swing: Swing, readonly powerful: boolean,
                 readonly timer_mode: TimerMode, hour: number) {
         this.off_timer = timer_mode === TimerMode.Off ? hour : 0;
@@ -123,86 +130,134 @@ end remote`;
         command += tmp_command;
 
         // issue commands
-        for (let i = 0; i < frame.length; i += 1) {
-            const bits = frame[i].toString(2);
-            for (let j = 15; j >= 0; j -= 1) {  // bit reverse output
+        for (let i = 0; i < frame.length - 1; i += 1) {
+            // output reverse bits per byte
+            const bits = sprintf("%08b", frame[i]);
+            for (let j = 7; j >= 0; j -= 1) {
                 [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
                     [bits[j] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO], current_row_issued_count);
                 command += tmp_command;
             }
         }
 
+        // issue checksum
+        const cs_bits = sprintf("%08b", DaikinIRCommand.calcChecksum(frame));
+        for (let i = 0; i < 8; i += 1) {
+            [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
+                [cs_bits[i] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO], current_row_issued_count);
+            command += tmp_command;
+        }
+
         return [command, current_row_issued_count];
     }
 
-    private getFrames(): number[][] {
+    getFrames(): number[][] {
         // *** Frame1 ***
-        const frameOne: number[] = [0x11, 0xDA, 0x27, 0x00, 0xC5, 0x30, 0x00, 0x07];
+/*
+Offset  Description            Length     Example        Decoding
+========================================================================================================
+0-3     Header                 4          11 da 27 00
+6       Comfort mode           1          10 (Enabled) or 00 (Disabled)
+7       Checksum               1          e7 (Comfort Enabled) / d7 (Comfort Disabled)
+ */
+        const frameOne: number[] = [
+            0x11, 0xDA, 0x27, 0x00, // header
+            0xC5,
+            0x00,
+            0x00,
+            0xD7  // checksum
+        ];
         // CheckSum
-        frameOne[frameOne.length - 1] = DaikinIRCommand.calcChecksum(frameOne);
+        // frameOne[frameOne.length - 1] = DaikinIRCommand.calcChecksum(frameOne);
 
         // *** Frame2 ***
-        const frameTwo: number[] = [0x11, 0xDA, 0x27, 0x00, 0x42, 0x00, 0x08, 0x5C];
-        // CheckSum
-        frameTwo[frameTwo.length - 1] = DaikinIRCommand.calcChecksum(frameTwo);
+        // fixed header? //
+        const frameTwo: number[] = [
+            0x11, 0xDA, 0x27, 0x00,  // header
+            0x42,
+            0x00,
+            0x00,
+            0x54  // checksum
+        ];
+        // // CheckSum
+        // frameTwo[frameTwo.length - 1] = DaikinIRCommand.calcChecksum(frameTwo);
 
         // *** Frame3 ***
+/*
+        Offset  Description   Length     Example        Decoding
+========================================================================================================
+00-03   Header                 4          11 da 27 00
+04      Message Identifier     1          00
+05      Mode, On/Off, Timer    1          49             49 = Heat, On, No Timer
+06      Temperature            1          30             It is temperature x2. 0x30 = 48 / 2 = 24°C
+08      Fan / Swing            1          30             30 = Fan 1/5 No Swing. 3F = Fan 1/5 + Swing.
+0a-0c   Timer delay            3          3c 00 60
+0d      Powerful               1          01             Powerful enabled
+10      Econo                  1          84             4 last bits  84 (Enabled) / 80 (Disabled)
+12      Checksum               1          8e             Add all previous bytes and do a OR with mask 0xff
+ */
         const frameThree: number[] = [
-            0x11, 0xDA, 0x27, 0x00, 0x00, 0x08, 0x00, 0x00,
-            0xB0, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0xC1,
-            0x80, 0x00, 0x00
+            0x11, 0xDA, 0x27, 0x00,  // Header
+            0x00,  // Message Identifier
+            0x08,  // Mode, Power On/Off, Timer (Default Mode: Auto, Power: Off, Timer: Off)
+            0x19,  // Temperature (Default 25)
+            0x00,
+            0xAF,  // Fan / Swing (Default Fan: Auto, Swing: On)
+            0x00,
+            0x00,  // On Timer delay
+            0x06,  // On Timer delay / Off Timer delay
+            0x60,  // Off Timer delay
+            0x00,  // Powerful (Default Disabled)
+            0x00,
+            0xC0, // 0xC1,
+            0x00, // 0x80,  // Econo (Default Disabled)
+            0x00,
+            0x26   // Checksum
         ];
+
         // Power
         frameThree[5] = this.power | frameThree[5];
         // Mode
         frameThree[5] = (this.mode << 4) | (0x0F & frameThree[5]);
-        // Degree
+        // Temperature
         switch (this.mode) {
         case Mode.Cold:
         case Mode.Warm:
-            frameThree[6] = this.degree;
+            // top sign bit(0) and 5bit use integer
+            frameThree[6] = (0x1F & this.temperature) << 1;
             break;
         case Mode.Auto:
         case Mode.Dry:
-            let degree_offset = this.degree;
-            if (degree_offset < 0) {
-                degree_offset *= -1;
-                degree_offset = ~degree_offset;
+            // top sign bit(0 or 1) and 3bit 0padded and 2bit use integer
+            let temperature_offset = this.temperature;
+            if (temperature_offset < 0) {
+                temperature_offset *= -1;
+                temperature_offset = ~temperature_offset;
             }
-            frameThree[6] = 1 << 5 | degree_offset;
+            frameThree[6] = (1 << 5) | (0x03 & temperature_offset);
             break;
         case Mode.Fan:
-            frameThree[6] = 25;
+            // top sign bit(0) and 5bit use integer
+            frameThree[6] = 25 << 1;
             break;
         }
         // FanSpeed
         frameThree[8] = (this.fan_speed << 4) | (0x0F & frameThree[8]);
         // Swing
         frameThree[8] = this.swing | (0xF0 & frameThree[8]);
-        // Off Timer
-        if (this.off_timer > 0) {
-            const bit = DaikinIRCommand.timeToBit(this.off_timer);
-            frameThree[13] |= 1 << 2;  // Flag bit
-            frameThree[7] = (bit >> 6) | (0xE0 & frameThree[7]);  // 先頭5bit
-            frameThree[8] = (0x3F & bit) | (0x03 & frameThree[8]);  // 残り6bit
-        } else {
-            frameThree[13] &= 0xFB;  // Flag bit
-            frameThree[7] &= 0xE0;  // 先頭5bit
-            frameThree[8] &= 0x03;  // 残り6bit
-        }
         // On Timer
         if (this.on_timer > 0) {
-            const bit = DaikinIRCommand.timeToBit(this.on_timer);
-            frameThree[13] |= 1 << 1;  // Flag bit
-            frameThree[8] = (bit >> 10) | (0xFE & frameThree[8]);  // 先頭1bit
-            frameThree[9] = 0xFF & (bit >> 2);  // 中間8bit
-            frameThree[10] = (0x03 & bit) << 6 | (0x3F & frameThree[10]);  // 残り2bit
-        } else {
-            frameThree[13] &= 0xFD;  // Flag bit
-            frameThree[8] &= 0xFE;  // 先頭1bit
-            frameThree[9] = 0;  // 中間8bit
-            frameThree[10] &= 0x3F;  // 残り2bit
+            frameThree[5] |= 1 << 1;  // Flag bit
+            [frameThree[10], frameThree[11]] = DaikinIRCommand.timeToBytes(this.on_timer, 3);
+            frameThree[12] = 0; // [11],[12]にOn/OffTimer両Off時FlagBitsがあるが、[10],[11]は上書きするので[12]のみ0set
         }
+        // Off Timer
+        if (this.off_timer > 0) {
+            frameThree[5] |= 1 << 2;  // Flag bit
+            [frameThree[11], frameThree[12]] = DaikinIRCommand.timeToBytes(this.off_timer, 7);
+        }
+        // Powerful
+        frameThree[13] = this.powerful ? 1 : 0;
         // CheckSum
         frameThree[frameThree.length - 1] = DaikinIRCommand.calcChecksum(frameThree);
 
@@ -214,16 +269,18 @@ end remote`;
         for (let i = 0; i < frame.length - 1; i += 1) {
             checksum += frame[i];
         }
-        return checksum;
+        return (0xFF & checksum);
     }
 
-    private static timeToBit(hour: number): number {
-        // 11bit use (2^11 >= 24hour * 60min)
-        const rounded_min = Math.round(hour) * 60;
-        let return_bits = 0;
-        for (let i = 0; i < 11; i += 1) {
-            return_bits = 1 & (rounded_min >> i);
-        }
-        return return_bits;
+    private static timeToBytes(hour: number, split_bits: number): number[] {
+        // convert to minutes
+        const minutes = Math.round(hour) * 60;
+
+        // convert to 11bit use little endian bits
+        const little_endian_minutes = (0xFF & minutes) | (minutes >> 8);
+
+        // return split bits
+        // [(split_bits), (11-split_bits)]
+        return [(2 ** split_bits - 1) & little_endian_minutes, little_endian_minutes >> split_bits];
     }
 }
