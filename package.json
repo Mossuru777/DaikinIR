@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@types/node": "^8.10.0",
+    "@types/sprintf-js": "^1.1.0",
     "del-cli": "^1.1.0",
     "postinstall-build": "^5.0.1"
   }

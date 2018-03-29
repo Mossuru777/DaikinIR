@@ -1,3 +1,4 @@
+import { sprintf } from "sprintf-js";
 import { Power, Mode, FanSpeed, Swing, TimerMode } from "./conf_enums";
 
 export class DaikinIRCommand {
@@ -11,7 +12,9 @@ export class DaikinIRCommand {
     private static readonly IR_FRAME_START = "35000";
 
     // LIRC private static readonlyants
-    private static readonly LIRC_SPACE = "     ";
+    private static readonly LIRC_INDENT_SPACE = "    ";
+    private static readonly LIRC_COMMAND_BEGINNING_SPACE = "  ";
+    private static readonly LIRC_COMMAND_SPACE = "    ";
     private static readonly LIRC_FRAME_START = [
         DaikinIRCommand.IR_FRAME_SEPARATOR_PULSE,
         DaikinIRCommand.IR_FRAME_SEPARATOR_SPACE
@@ -46,57 +49,80 @@ export class DaikinIRCommand {
     getLIRCConfig(): string {
         const frames = this.getFrames();
 
+        let row_issued_count = -1;
+        let begin_command: string;
+        [begin_command, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands([
+            DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO,
+            DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO
+        ], row_issued_count);
+
         let command1: string;
         let command2: string;
         let command3: string;
-        let row_issued_count = 2;
-        [command1, row_issued_count] = DaikinIRCommand.buildLIRCCommand(frames[0], row_issued_count, true);
-        [command2, row_issued_count] = DaikinIRCommand.buildLIRCCommand(frames[1], row_issued_count, false);
-        [command3, row_issued_count] = DaikinIRCommand.buildLIRCCommand(frames[2], row_issued_count, false);
+        [command1, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[0], row_issued_count, true);
+        [command2, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[1], row_issued_count, false);
+        [command3, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[2], row_issued_count, false);
 
         return `
 begin remote
-    name  AirCon
-    flags RAW_CODES
-    eps 30
-    aeps 100
-    gap 34978
+${DaikinIRCommand.LIRC_INDENT_SPACE}name  AirCon
+${DaikinIRCommand.LIRC_INDENT_SPACE}flags RAW_CODES
+${DaikinIRCommand.LIRC_INDENT_SPACE}eps 30
+${DaikinIRCommand.LIRC_INDENT_SPACE}aeps 100
+${DaikinIRCommand.LIRC_INDENT_SPACE}gap 34978
 
-    begin raw_codes
-        name Control
-${DaikinIRCommand.LIRC_SPACE}${DaikinIRCommand.LIRC_ZERO}${DaikinIRCommand.LIRC_ZERO}${DaikinIRCommand.LIRC_ZERO}
-${DaikinIRCommand.LIRC_SPACE}${DaikinIRCommand.LIRC_ZERO}${DaikinIRCommand.LIRC_ZERO}${command1}${command2}${command3}
-    end raw_codes
+${DaikinIRCommand.LIRC_INDENT_SPACE}begin raw_codes
+${DaikinIRCommand.LIRC_INDENT_SPACE}${DaikinIRCommand.LIRC_INDENT_SPACE}name Control
+${begin_command}${command1}${command2}${command3}
+${DaikinIRCommand.LIRC_INDENT_SPACE}end raw_codes
 end remote
 `;
     }
 
-    private static buildLIRCCommand(frame: number[], row_issued_count: number,
-                                    is_first_package: boolean): [string, number] {
+    private static buildLIRCCommandFromIssueCommands(issue_commands: string[][],
+                                                     row_issued_count: number): [string, number] {
         let command = "";
         let current_row_issued_count = row_issued_count;
-        const issueCommands = function (issue_commands: string[][]) {
-            for (let i = 0; i < issue_commands.length; i += 1) {
-                for (let j = 0; j < issue_commands[i].length; j += 1) {
+        for (let i = 0; i < issue_commands.length; i += 1) {
+            for (let j = 0; j < issue_commands[i].length; j += 1) {
+                let space = DaikinIRCommand.LIRC_COMMAND_SPACE;
+                if (current_row_issued_count === -1 || current_row_issued_count === 3) {
                     if (current_row_issued_count === 3) {
                         command += "\n";
-                        current_row_issued_count = 0;
                     }
-                    command += DaikinIRCommand.LIRC_SPACE + issue_commands[i][j];
-                    current_row_issued_count += 1;
+                    space = DaikinIRCommand.LIRC_INDENT_SPACE + DaikinIRCommand.LIRC_INDENT_SPACE
+                        + DaikinIRCommand.LIRC_COMMAND_BEGINNING_SPACE;
+                    current_row_issued_count = 0;
                 }
+
+                command += space + sprintf("%5s", issue_commands[i][j]);
+                current_row_issued_count += 1;
             }
-        };
+        }
+
+        return [command, current_row_issued_count];
+    }
+
+    private static buildLIRCCommandFromFrames(frame: number[], row_issued_count: number,
+                                              is_first_package: boolean): [string, number] {
+        let command = "";
+        let current_row_issued_count = row_issued_count;
+
+        let tmp_command: string;
 
         // issue package and frame start declare
         const pkg_start = is_first_package ? DaikinIRCommand.LIRC_PKG_START : DaikinIRCommand.LIRC_MIDDLE_PKG_START;
-        issueCommands([pkg_start, DaikinIRCommand.LIRC_FRAME_START]);
+        [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
+            [pkg_start, DaikinIRCommand.LIRC_FRAME_START], current_row_issued_count);
+        command += tmp_command;
 
         // issue commands
         for (let i = 0; i < frame.length; i += 1) {
             const bits = frame[i].toString(2);
             for (let j = 15; j >= 0; j -= 1) {  // bit reverse output
-                issueCommands([bits[j] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO]);
+                [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
+                    [bits[j] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO], current_row_issued_count);
+                command += tmp_command;
             }
         }
 
@@ -134,9 +160,9 @@ end remote
         case Mode.Dry:
             let degree_offset = this.degree;
             if (degree_offset < 0) {
-                    degree_offset *= -1;
-                    degree_offset = ~degree_offset;
-                }
+                degree_offset *= -1;
+                degree_offset = ~degree_offset;
+            }
             frameThree[6] = 1 << 5 | degree_offset;
             break;
         case Mode.Fan:
