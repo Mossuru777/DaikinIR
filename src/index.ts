@@ -1,5 +1,5 @@
 /*
-    References
+    Reference
 
     http://web.archive.org/web/20170107154250/http://rdlab.cdmt.vn/project-2013/daikin-ir-protocol
     https://github.com/blafois/Daikin-IR-Reverse
@@ -9,46 +9,52 @@ import { sprintf } from "sprintf-js";
 import { Power, Mode, FanSpeed, Swing, TimerMode } from "./conf_enums";
 
 export class DaikinIRCommand {
-    // IR Timing private static readonlyants
-    private static readonly IR_SEPARATOR_PULSE = "430";
-    private static readonly IR_FRAME_SEPARATOR_PULSE = "3400";
-    private static readonly IR_FRAME_SEPARATOR_SPACE = "1750";
-    private static readonly IR_ONE = "1320";
-    private static readonly IR_ZERO = "450";
-    private static readonly IR_PKG_START = "25000";
-    private static readonly IR_FRAME_START = "35000";
+    readonly off_timer: number;
+    readonly on_timer: number;
+
+    // IR Timing private static constants
+    private static readonly IR_INITIAL_FRAME_SEPARATE_SPACE = "25375";
+    private static readonly IR_FRAME_START_END_PULSE = "3450";
+    private static readonly IR_FRAME_START_SPACE = "1750";
+    private static readonly IR_BIT_SEPARATOR_PULSE = "430";
+    private static readonly IR_BIT_ZERO_SPACE = "420";
+    private static readonly IR_BIT_ONE_SPACE = "1300";
+    private static readonly IR_FRAME_SEPARATE_SPACE = "35000";
 
     // LIRC private static constants
     private static readonly LIRC_MAX_COMMANDS = 5;
     private static readonly LIRC_INDENT_SPACE = "    ";
     private static readonly LIRC_COMMAND_BEGINNING_SPACE = "  ";
     private static readonly LIRC_COMMAND_SPACE = "    ";
+    private static readonly LIRC_INITIAL_FRAME = [
+        // CHANGE_RATIO = 0.955
+        // pulse[0] = 550
+        // pulse[i] = Math.ceil(Math.ceil(pulse[i - 1] * CHANGE_RATIO, 0) / 5) * 5  ( 1 <= i <= 4 )
+        // space[0] = 320
+        // space[i] = Math.ceil(Math.ceil(space[i - 1] / CHANGE_RATIO, 0) / 5) * 5  ( 1 <= i <= 4 )
+
+        // from the above, create a command below
+        "550", "320", "525", "335", "505", "355", "485", "375", "465", "395", "445",
+        DaikinIRCommand.IR_INITIAL_FRAME_SEPARATE_SPACE
+    ];
     private static readonly LIRC_FRAME_START = [
-        DaikinIRCommand.IR_FRAME_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_FRAME_SEPARATOR_SPACE
+        DaikinIRCommand.IR_FRAME_START_END_PULSE,
+        DaikinIRCommand.IR_FRAME_START_SPACE
     ];
     private static readonly LIRC_FRAME_END = [
-        DaikinIRCommand.IR_FRAME_SEPARATOR_PULSE
+        DaikinIRCommand.IR_FRAME_START_END_PULSE
     ];
-    private static readonly LIRC_PKG_START = [
-        DaikinIRCommand.IR_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_PKG_START
-    ];
-    private static readonly LIRC_MIDDLE_PKG_START = [
-        DaikinIRCommand.IR_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_FRAME_START
+    private static readonly LIRC_FRAME_SEPARATE = [
+        DaikinIRCommand.IR_FRAME_SEPARATE_SPACE
     ];
     private static readonly LIRC_ZERO = [
-        DaikinIRCommand.IR_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_ZERO
+        DaikinIRCommand.IR_BIT_SEPARATOR_PULSE,
+        DaikinIRCommand.IR_BIT_ZERO_SPACE
     ];
     private static readonly LIRC_ONE = [
-        DaikinIRCommand.IR_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_ONE
+        DaikinIRCommand.IR_BIT_SEPARATOR_PULSE,
+        DaikinIRCommand.IR_BIT_ONE_SPACE
     ];
-
-    readonly off_timer: number;
-    readonly on_timer: number;
 
     constructor(readonly power: Power, readonly mode: Mode, readonly temperature: number,
                 readonly fan_speed: FanSpeed, readonly swing: Swing, readonly powerful: boolean,
@@ -63,31 +69,25 @@ export class DaikinIRCommand {
         let row_issued_count = -1;
         let begin_command: string;
         [begin_command, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands([
-            DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO,
-            DaikinIRCommand.LIRC_ZERO, DaikinIRCommand.LIRC_ZERO
+            DaikinIRCommand.LIRC_INITIAL_FRAME
         ], row_issued_count);
 
         let command1: string;
         let command2: string;
         let command3: string;
-        [command1, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[0], row_issued_count, true);
+        [command1, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[0], row_issued_count, false);
         [command2, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[1], row_issued_count, false);
-        [command3, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[2], row_issued_count, false);
-
-        let end_command: string;
-        [end_command, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands([
-            DaikinIRCommand.LIRC_FRAME_END
-        ], row_issued_count);
+        [command3, row_issued_count] = DaikinIRCommand.buildLIRCCommandFromFrames(frames[2], row_issued_count, true);
 
         return `begin remote
 ${DaikinIRCommand.LIRC_INDENT_SPACE}name  AirCon
 ${DaikinIRCommand.LIRC_INDENT_SPACE}flags RAW_CODES
 ${DaikinIRCommand.LIRC_INDENT_SPACE}eps 30
 ${DaikinIRCommand.LIRC_INDENT_SPACE}aeps 100
-${DaikinIRCommand.LIRC_INDENT_SPACE}gap 34978
+${DaikinIRCommand.LIRC_INDENT_SPACE}gap 0
 ${DaikinIRCommand.LIRC_INDENT_SPACE}begin raw_codes
 ${DaikinIRCommand.LIRC_INDENT_SPACE}${DaikinIRCommand.LIRC_INDENT_SPACE}name Control
-${begin_command}${command1}${command2}${command3}${end_command}
+${begin_command}${command1}${command2}${command3}
 ${DaikinIRCommand.LIRC_INDENT_SPACE}end raw_codes
 end remote`;
     }
@@ -117,16 +117,15 @@ end remote`;
     }
 
     private static buildLIRCCommandFromFrames(frame: number[], row_issued_count: number,
-                                              is_first_package: boolean): [string, number] {
+                                              is_last_frame: boolean): [string, number] {
         let command = "";
         let current_row_issued_count = row_issued_count;
 
         let tmp_command: string;
 
-        // issue package and frame start declare
-        const pkg_start = is_first_package ? DaikinIRCommand.LIRC_PKG_START : DaikinIRCommand.LIRC_MIDDLE_PKG_START;
+        // issue frame header
         [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
-            [pkg_start, DaikinIRCommand.LIRC_FRAME_START], current_row_issued_count);
+            [this.LIRC_FRAME_START], current_row_issued_count);
         command += tmp_command;
 
         // issue commands
@@ -140,11 +139,23 @@ end remote`;
             }
         }
 
-        // issue checksum
+        // issue checksum (output as reverse bits)
         const cs_bits = sprintf("%08b", DaikinIRCommand.calcChecksum(frame));
-        for (let i = 0; i < 8; i += 1) {
+        for (let i = 7; i >= 0; i -= 1) {
             [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
                 [cs_bits[i] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO], current_row_issued_count);
+            command += tmp_command;
+        }
+
+        // issue frame footer
+        [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
+            [DaikinIRCommand.LIRC_FRAME_END], current_row_issued_count);
+        command += tmp_command;
+
+        // issue space between frame
+        if (!is_last_frame) {
+            [tmp_command, current_row_issued_count] = DaikinIRCommand.buildLIRCCommandFromIssueCommands(
+                [DaikinIRCommand.LIRC_FRAME_SEPARATE], current_row_issued_count);
             command += tmp_command;
         }
 
