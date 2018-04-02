@@ -6,7 +6,10 @@
     "build": "npm run clean && tsc",
     "clean": "del-cli dist",
     "lint": "tslint --format stylish --project .",
-    "postinstall": "postinstall-build dist"
+    "postinstall": "postinstall-build dist",
+    "sample-build": "npm run sample-clean & tsc --project sample/tsconfig.sample.json",
+    "sample-clean": "del-cli sample/dist",
+    "sample": "npm run sample-build & node sample/dist/sample/sample.js"
   },
   "author": "Mossuru777",
   "license": "ISC",

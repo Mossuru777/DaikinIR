@@ -6,7 +6,7 @@
     "preserveConstEnums": true,            /* Do not erase const enum declarations in generated code. */
     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     "outDir": "dist",                       /* Redirect output structure to the directory. */
-    "rootDir": "src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    "rootDir": "..",                        /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     "removeComments": true,                /* Do not emit comments to output. */
     "newLine": "LF",
 
@@ -22,5 +22,5 @@
     /* Experimental Options */
     "experimentalDecorators": true         /* Enables experimental support for ES7 decorators. */
   },
-  "exclude": [ "sample" ]
+  "exclude": [ "sample/output" ]
 }
