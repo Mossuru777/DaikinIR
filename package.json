@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm run clean && npm run lint && tsc",
-    "clean": "del-cli dist/* !.gitignore",
+    "build": "npm run clean && tsc",
+    "clean": "del-cli dist",
     "lint": "tslint --format stylish --project .",
     "postinstall": "postinstall-build dist"
   },
