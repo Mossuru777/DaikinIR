@@ -1,11 +1,11 @@
 import { sprintf } from "sprintf-js";
-import { DaikinIRCommand } from "../src";
+import { DaikinIR } from "../src";
 import { FanSpeed, Mode, Power, Swing, TimerMode } from "../src/conf_enums";
 import * as fs from "fs";
 
 const outputPath = "sample/dist/lirc_output_sample.conf";
 
-const command = new DaikinIRCommand(
+const command = new DaikinIR(
     Power.On, Mode.Auto, 20, FanSpeed.Auto, Swing.On, false, TimerMode.None, 0);
 
 console.log("[Configuration]");
@@ -21,7 +21,7 @@ console.log("[LIRC Configuration File Output]");
 console.log("Path: " + outputPath);
 fs.writeFileSync(outputPath, command.getLIRCConfig());
 
-function getCommandConf(command: DaikinIRCommand): string {
+function getCommandConf(command: DaikinIR): string {
     let conf = "";
 
     conf += "Power: " + (command.power === Power.On ? "On" : "Off") + "\n";
@@ -93,7 +93,7 @@ function getCommandConf(command: DaikinIRCommand): string {
     return conf;
 }
 
-function getCommandBits(command: DaikinIRCommand): string {
+function getCommandBits(command: DaikinIR): string {
     let command_bits = "";
     const frames = command.getFrames();
     for (let i = 0; i < frames.length; i += 1) {
