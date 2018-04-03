@@ -16,13 +16,13 @@
   "private": true,
   "devDependencies": {
     "tslint": "^5.9.1",
-    "tslint-config-airbnb": "^5.8.0",
-    "typescript": "^2.8.1"
+    "tslint-config-airbnb": "^5.8.0"
   },
   "dependencies": {
     "@types/node": "^8.10.1",
     "@types/sprintf-js": "^1.1.0",
     "del-cli": "^1.1.0",
-    "postinstall-build": "^5.0.1"
+    "postinstall-build": "^5.0.1",
+    "typescript": "^2.8.1"
   }
 }
