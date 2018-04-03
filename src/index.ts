@@ -8,7 +8,7 @@
 import { sprintf } from "sprintf-js";
 import { Power, Mode, FanSpeed, Swing, TimerMode } from "./conf_enums";
 
-export class DaikinIRCommand {
+export class DaikinIR {
     readonly off_timer: number;
     readonly on_timer: number;
 
@@ -35,25 +35,25 @@ export class DaikinIRCommand {
 
         // from the above, create a command below
         "550", "320", "525", "335", "505", "355", "485", "375", "465", "395", "445",
-        DaikinIRCommand.IR_INITIAL_FRAME_SEPARATE_SPACE
+        DaikinIR.IR_INITIAL_FRAME_SEPARATE_SPACE
     ];
     private static readonly LIRC_FRAME_START = [
-        DaikinIRCommand.IR_FRAME_START_END_PULSE,
-        DaikinIRCommand.IR_FRAME_START_SPACE
+        DaikinIR.IR_FRAME_START_END_PULSE,
+        DaikinIR.IR_FRAME_START_SPACE
     ];
     private static readonly LIRC_FRAME_END = [
-        DaikinIRCommand.IR_FRAME_START_END_PULSE
+        DaikinIR.IR_FRAME_START_END_PULSE
     ];
     private static readonly LIRC_FRAME_SEPARATE = [
-        DaikinIRCommand.IR_FRAME_SEPARATE_SPACE
+        DaikinIR.IR_FRAME_SEPARATE_SPACE
     ];
     private static readonly LIRC_ZERO = [
-        DaikinIRCommand.IR_BIT_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_BIT_ZERO_SPACE
+        DaikinIR.IR_BIT_SEPARATOR_PULSE,
+        DaikinIR.IR_BIT_ZERO_SPACE
     ];
     private static readonly LIRC_ONE = [
-        DaikinIRCommand.IR_BIT_SEPARATOR_PULSE,
-        DaikinIRCommand.IR_BIT_ONE_SPACE
+        DaikinIR.IR_BIT_SEPARATOR_PULSE,
+        DaikinIR.IR_BIT_ONE_SPACE
     ];
 
     // LIRC row issued command counter
@@ -71,20 +71,20 @@ export class DaikinIRCommand {
 
         this.row_issued_count = -1;
         const initial_commands = this.buildLIRCCommandFromIssueCommands([
-            DaikinIRCommand.LIRC_INITIAL_FRAME
+            DaikinIR.LIRC_INITIAL_FRAME
         ]);
         const frames_commands = this.buildLIRCCommandsFromFrames(frames);
 
         return `begin remote
-${DaikinIRCommand.LIRC_INDENT_SPACE}name  AirCon
-${DaikinIRCommand.LIRC_INDENT_SPACE}flags RAW_CODES
-${DaikinIRCommand.LIRC_INDENT_SPACE}eps 30
-${DaikinIRCommand.LIRC_INDENT_SPACE}aeps 100
-${DaikinIRCommand.LIRC_INDENT_SPACE}gap 0
-${DaikinIRCommand.LIRC_INDENT_SPACE}begin raw_codes
-${DaikinIRCommand.LIRC_INDENT_SPACE}${DaikinIRCommand.LIRC_INDENT_SPACE}name Control
+${DaikinIR.LIRC_INDENT_SPACE}name  AirCon
+${DaikinIR.LIRC_INDENT_SPACE}flags RAW_CODES
+${DaikinIR.LIRC_INDENT_SPACE}eps 30
+${DaikinIR.LIRC_INDENT_SPACE}aeps 100
+${DaikinIR.LIRC_INDENT_SPACE}gap 0
+${DaikinIR.LIRC_INDENT_SPACE}begin raw_codes
+${DaikinIR.LIRC_INDENT_SPACE}${DaikinIR.LIRC_INDENT_SPACE}name Control
 ${initial_commands}${frames_commands}
-${DaikinIRCommand.LIRC_INDENT_SPACE}end raw_codes
+${DaikinIR.LIRC_INDENT_SPACE}end raw_codes
 end remote`;
     }
 
@@ -92,13 +92,13 @@ end remote`;
         let command = "";
         for (let i = 0; i < issue_commands.length; i += 1) {
             for (let j = 0; j < issue_commands[i].length; j += 1) {
-                let space = DaikinIRCommand.LIRC_COMMAND_SPACE;
-                if (this.row_issued_count === -1 || this.row_issued_count === DaikinIRCommand.LIRC_MAX_COMMANDS) {
-                    if (this.row_issued_count === DaikinIRCommand.LIRC_MAX_COMMANDS) {
+                let space = DaikinIR.LIRC_COMMAND_SPACE;
+                if (this.row_issued_count === -1 || this.row_issued_count === DaikinIR.LIRC_MAX_COMMANDS) {
+                    if (this.row_issued_count === DaikinIR.LIRC_MAX_COMMANDS) {
                         command += "\n";
                     }
-                    space = DaikinIRCommand.LIRC_INDENT_SPACE + DaikinIRCommand.LIRC_INDENT_SPACE
-                        + DaikinIRCommand.LIRC_COMMAND_BEGINNING_SPACE;
+                    space = DaikinIR.LIRC_INDENT_SPACE + DaikinIR.LIRC_INDENT_SPACE
+                        + DaikinIR.LIRC_COMMAND_BEGINNING_SPACE;
                     this.row_issued_count = 0;
                 }
 
@@ -116,7 +116,7 @@ end remote`;
         for (let i = 0; i < 3; i += 1) {
             // issue frame header
             commands += this.buildLIRCCommandFromIssueCommands([
-                DaikinIRCommand.LIRC_FRAME_START
+                DaikinIR.LIRC_FRAME_START
             ]);
 
             // issue commands
@@ -125,28 +125,28 @@ end remote`;
                 const bits = sprintf("%08b", frames[i][j]);
                 for (let k = 7; k >= 0; k -= 1) {
                     commands += this.buildLIRCCommandFromIssueCommands([
-                        bits[k] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO
+                        bits[k] === "1" ? DaikinIR.LIRC_ONE : DaikinIR.LIRC_ZERO
                     ]);
                 }
             }
 
             // issue checksum (output as reverse bits)
-            const cs_bits = sprintf("%08b", DaikinIRCommand.calcChecksum(frames[i]));
+            const cs_bits = sprintf("%08b", DaikinIR.calcChecksum(frames[i]));
             for (let j = 7; j >= 0; j -= 1) {
                 commands += this.buildLIRCCommandFromIssueCommands([
-                    cs_bits[i] === "1" ? DaikinIRCommand.LIRC_ONE : DaikinIRCommand.LIRC_ZERO
+                    cs_bits[i] === "1" ? DaikinIR.LIRC_ONE : DaikinIR.LIRC_ZERO
                 ]);
             }
 
             // issue frame footer
             commands += this.buildLIRCCommandFromIssueCommands([
-                DaikinIRCommand.LIRC_FRAME_END
+                DaikinIR.LIRC_FRAME_END
             ]);
 
             // issue space between frame
             if (i < 2) {
                 commands += this.buildLIRCCommandFromIssueCommands([
-                    DaikinIRCommand.LIRC_FRAME_SEPARATE
+                    DaikinIR.LIRC_FRAME_SEPARATE
                 ]);
             }
         }
@@ -251,18 +251,18 @@ Offset  Description            Length     Example        Decoding
         // On Timer
         if (this.on_timer > 0) {
             frameThree[5] |= 1 << 1;  // Flag bit
-            [frameThree[10], frameThree[11]] = DaikinIRCommand.timeToBytes(this.on_timer, 3);
+            [frameThree[10], frameThree[11]] = DaikinIR.timeToBytes(this.on_timer, 3);
             frameThree[12] = 0; // [11],[12]にOn/OffTimer両Off時FlagBitsがあるが、[10],[11]は上書きするので[12]のみ0set
         }
         // Off Timer
         if (this.off_timer > 0) {
             frameThree[5] |= 1 << 2;  // Flag bit
-            [frameThree[11], frameThree[12]] = DaikinIRCommand.timeToBytes(this.off_timer, 7);
+            [frameThree[11], frameThree[12]] = DaikinIR.timeToBytes(this.off_timer, 7);
         }
         // Powerful
         frameThree[13] = this.powerful ? 1 : 0;
         // CheckSum
-        frameThree[frameThree.length - 1] = DaikinIRCommand.calcChecksum(frameThree);
+        frameThree[frameThree.length - 1] = DaikinIR.calcChecksum(frameThree);
 
         return [frameOne, frameTwo, frameThree];
     }
