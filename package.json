@@ -7,7 +7,7 @@
     "build": "npm run clean && tsc",
     "clean": "del-cli dist",
     "lint": "tslint --format stylish --project .",
-    "postinstall": "postinstall-build dist",
+    "postinstall": "postinstall-build --silent dist",
     "sample-build": "npm run sample-clean & tsc --project sample",
     "sample-clean": "del-cli sample/dist",
     "sample-lint" : "tslint --format stylish --project sample",
