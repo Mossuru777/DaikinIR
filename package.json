@@ -1,15 +1,16 @@
 {
   "name": "daikin-ir",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "del-cli dist",
     "lint": "tslint --format stylish --project .",
-    "postinstall": "postinstall-build dist",
+    "postinstall": "postinstall-build --silent dist",
     "sample-build": "npm run sample-clean & tsc --project sample",
     "sample-clean": "del-cli sample/dist",
-    "sample-lint" : "tslint --format stylish --project sample",
+    "sample-lint": "tslint --format stylish --project sample",
     "sample": "npm run sample-build & node sample/dist/sample/sample.js"
   },
   "author": "Mossuru777",
