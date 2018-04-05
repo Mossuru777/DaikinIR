@@ -10,7 +10,7 @@
     "postinstall": "postinstall-build --silent dist",
     "sample-build": "npm run sample-clean & tsc --project sample",
     "sample-clean": "del-cli sample/dist",
-    "sample-lint" : "tslint --format stylish --project sample",
+    "sample-lint": "tslint --format stylish --project sample",
     "sample": "npm run sample-build & node sample/dist/sample/sample.js"
   },
   "author": "Mossuru777",

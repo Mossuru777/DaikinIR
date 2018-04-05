@@ -1,12 +1,14 @@
 import { sprintf } from "sprintf-js";
 import { DaikinIR } from "../src";
-import { FanSpeed, Mode, Power, Swing, TimerMode } from "../src/conf_enums";
 import * as fs from "fs";
 
 const outputPath = "sample/dist/lirc_output_sample.conf";
 
 const command = new DaikinIR(
-    Power.On, Mode.Auto, 20, FanSpeed.Auto, Swing.On, false, TimerMode.None, 0);
+    DaikinIR.Enums.Power.On, DaikinIR.Enums.Mode.Auto, 20,
+    DaikinIR.Enums.FanSpeed.Auto, DaikinIR.Enums.Swing.On, false,
+    DaikinIR.Enums.TimerMode.None, 0
+);
 
 console.log("[Configuration]");
 console.log(getCommandConf(command));
@@ -24,23 +26,23 @@ fs.writeFileSync(outputPath, command.getLIRCConfig());
 function getCommandConf(command: DaikinIR): string {
     let conf = "";
 
-    conf += "Power: " + (command.power === Power.On ? "On" : "Off") + "\n";
+    conf += "Power: " + (command.power === DaikinIR.Enums.Power.On ? "On" : "Off") + "\n";
 
     conf += "Mode: ";
     switch (command.mode) {
-    case Mode.Auto:
+    case DaikinIR.Enums.Mode.Auto:
         conf += "Auto";
         break;
-    case Mode.Dry:
+    case DaikinIR.Enums.Mode.Dry:
         conf += "Dry";
         break;
-    case Mode.Cold:
+    case DaikinIR.Enums.Mode.Cold:
         conf += "Cold";
         break;
-    case Mode.Warm:
+    case DaikinIR.Enums.Mode.Warm:
         conf += "Warm";
         break;
-    case Mode.Fan:
+    case DaikinIR.Enums.Mode.Fan:
         conf += "Fan";
     }
     conf += "\n";
@@ -49,43 +51,43 @@ function getCommandConf(command: DaikinIR): string {
 
     conf += "FanSpeed: ";
     switch (command.fan_speed) {
-    case FanSpeed.Level1:
+    case DaikinIR.Enums.FanSpeed.Level1:
         conf += "1/5";
         break;
-    case FanSpeed.Level2:
+    case DaikinIR.Enums.FanSpeed.Level2:
         conf += "2/5";
         break;
-    case FanSpeed.Level3:
+    case DaikinIR.Enums.FanSpeed.Level3:
         conf += "3/5";
         break;
-    case FanSpeed.Level4:
+    case DaikinIR.Enums.FanSpeed.Level4:
         conf += "4/5";
         break;
-    case FanSpeed.Level5:
+    case DaikinIR.Enums.FanSpeed.Level5:
         conf += "5/5";
         break;
-    case FanSpeed.Auto:
+    case DaikinIR.Enums.FanSpeed.Auto:
         conf += "Auto";
         break;
-    case FanSpeed.Silent:
+    case DaikinIR.Enums.FanSpeed.Silent:
         conf += "Silent";
         break;
     }
     conf += "\n";
 
-    conf += "Swing: " + (command.swing === Swing.On ? "On" : "Off") + "\n";
+    conf += "Swing: " + (command.swing === DaikinIR.Enums.Swing.On ? "On" : "Off") + "\n";
 
     conf += "Powerful: " + (command.powerful ? "On" : "Off") + "\n";
 
     conf += "Timer: ";
     switch (command.timer_mode) {
-    case TimerMode.None:
+    case DaikinIR.Enums.TimerMode.None:
         conf += "None";
         break;
-    case TimerMode.On:
+    case DaikinIR.Enums.TimerMode.On:
         conf += "OnTimer - " + command.on_timer + "hour later";
         break;
-    case TimerMode.Off:
+    case DaikinIR.Enums.TimerMode.Off:
         conf += "OffTimer - " + command.off_timer + "hour later";
         break;
     }

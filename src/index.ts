@@ -6,7 +6,6 @@
  */
 
 import { sprintf } from "sprintf-js";
-import { Power, Mode, FanSpeed, Swing, TimerMode } from "./conf_enums";
 
 export class DaikinIR {
     readonly off_timer: number;
@@ -59,11 +58,13 @@ export class DaikinIR {
     // LIRC row issued command counter
     private row_issued_count: number = -1;
 
-    constructor(readonly power: Power, readonly mode: Mode, readonly temperature: number,
-                readonly fan_speed: FanSpeed, readonly swing: Swing, readonly powerful: boolean,
-                readonly timer_mode: TimerMode, hour: number) {
-        this.off_timer = timer_mode === TimerMode.Off ? hour : 0;
-        this.on_timer = timer_mode === TimerMode.On ? hour : 0;
+    constructor(readonly power: DaikinIR.Enums.Power, readonly mode: DaikinIR.Enums.Mode,
+                readonly temperature: number, readonly fan_speed: DaikinIR.Enums.FanSpeed,
+                readonly swing: DaikinIR.Enums.Swing, readonly powerful: boolean,
+                readonly timer_mode: DaikinIR.Enums.TimerMode, hour: number
+    ) {
+        this.off_timer = timer_mode === DaikinIR.Enums.TimerMode.Off ? hour : 0;
+        this.on_timer = timer_mode === DaikinIR.Enums.TimerMode.On ? hour : 0;
     }
 
     getLIRCConfig(): string {
@@ -224,13 +225,13 @@ Offset  Description            Length     Example        Decoding
         frameThree[5] = (this.mode << 4) | (0x0F & frameThree[5]);
         // Temperature
         switch (this.mode) {
-        case Mode.Cold:
-        case Mode.Warm:
+        case DaikinIR.Enums.Mode.Cold:
+        case DaikinIR.Enums.Mode.Warm:
             // top sign bit(0) and 5bit use integer
             frameThree[6] = (0x1F & this.temperature) << 1;
             break;
-        case Mode.Auto:
-        case Mode.Dry:
+        case DaikinIR.Enums.Mode.Auto:
+        case DaikinIR.Enums.Mode.Dry:
             // top sign bit(0 or 1) and 3bit 0padded and 2bit use integer
             let temperature_offset = this.temperature;
             if (temperature_offset < 0) {
@@ -239,7 +240,7 @@ Offset  Description            Length     Example        Decoding
             }
             frameThree[6] = (1 << 5) | (0x03 & temperature_offset);
             break;
-        case Mode.Fan:
+        case DaikinIR.Enums.Mode.Fan:
             // top sign bit(0) and 5bit use integer
             frameThree[6] = 25 << 1;
             break;
@@ -285,5 +286,46 @@ Offset  Description            Length     Example        Decoding
         // return split bits
         // [(split_bits), (11-split_bits)]
         return [(2 ** split_bits - 1) & little_endian_minutes, little_endian_minutes >> split_bits];
+    }
+}
+
+export namespace DaikinIR.Enums {
+    export const enum Power {
+        // 1bit use
+        Off = 0b0000,
+        On = 0b0001
+    }
+
+    export const enum Mode {
+        // 3bit use
+        Auto = 0b0000,
+        Dry = 0b0010,
+        Cold = 0b0011,
+        Warm = 0b0100,
+        Fan = 0b0110
+    }
+
+    export const enum FanSpeed {
+        // 4bit use
+        Level1 = 0b0011,
+        Level2 = 0b0100,
+        Level3 = 0b0101,
+        Level4 = 0b0110,
+        Level5 = 0b0111,
+        Auto = 0b1010,
+        Silent = 0b1011,
+
+    }
+
+    export const enum Swing {
+        // 4bit use
+        Off = 0b0000,
+        On = 0b1111
+    }
+
+    export const enum TimerMode {
+        None,
+        Off,
+        On
     }
 }
