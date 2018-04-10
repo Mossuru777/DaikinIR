@@ -16,6 +16,9 @@
   "author": "Mossuru777",
   "license": "ISC",
   "private": true,
+  "dependencies": {
+    "sprintf-js": "^1.1.1"
+  },
   "devDependencies": {
     "@types/node": "^8.10.4",
     "@types/sprintf-js": "^1.1.0",
