@@ -4,14 +4,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npm run clean && tsc",
+    "build": "tsc",
     "clean": "del-cli dist",
-    "lint": "tslint --format stylish --project .",
+    "lint": "tslint --fix --format stylish --project .",
     "postinstall": "postinstall-build --silent dist",
-    "sample-build": "npm run sample-clean & tsc --project sample",
+    "sample-build": "tsc --project sample",
     "sample-clean": "del-cli sample/dist",
-    "sample-lint": "tslint --format stylish --project sample",
-    "sample": "npm run sample-build & node sample/dist/sample/sample.js"
+    "sample-lint": "tslint --fix --format stylish --project sample",
+    "sample": "node sample/dist/sample/sample.js"
   },
   "author": "Mossuru777",
   "license": "ISC",
