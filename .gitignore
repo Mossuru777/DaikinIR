@@ -1,5 +1,4 @@
-dist/
-sample/dist/
+sample/dist/lirc_output_sample.conf
 
 # Created by https://www.gitignore.io/api/osx,node,linux,windows,intellij+all
 

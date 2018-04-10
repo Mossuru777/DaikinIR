@@ -20,7 +20,6 @@ npm install
 ```sh
 git clone https://github.com/Mossuru777/DaikinIR.git
 cd DaikinIR
-npm install
 npm run sample
 ```
 

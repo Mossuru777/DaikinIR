@@ -4,27 +4,31 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "clean": "del-cli dist",
-    "lint": "tslint --fix --format stylish --project .",
-    "postinstall": "postinstall-build --silent dist",
-    "sample-build": "tsc --project sample",
-    "sample-clean": "del-cli sample/dist",
-    "sample-lint": "tslint --fix --format stylish --project sample",
-    "sample": "node sample/dist/sample/sample.js"
+    "build:main": "tsc",
+    "clean:main": "del-cli dist",
+    "lint:main": "tslint --fix --format stylish --project .",
+    "build:sample": "tsc --project sample",
+    "clean:sample": "del-cli sample/dist",
+    "lint:sample": "tslint --fix --format stylish --project sample",
+    "sample": "node sample/dist/sample/sample.js",
+    "prepare": "npm-run-all -p clean:* -p lint:* -s build:*"
   },
   "author": "Mossuru777",
   "license": "ISC",
   "private": true,
   "devDependencies": {
-    "tslint": "^5.9.1",
-    "tslint-config-airbnb": "^5.8.0"
-  },
-  "dependencies": {
-    "@types/node": "^8.10.1",
+    "@types/node": "^8.10.4",
     "@types/sprintf-js": "^1.1.0",
     "del-cli": "^1.1.0",
-    "postinstall-build": "^5.0.1",
+    "husky": "^0.15.0-rc.13",
+    "npm-run-all": "^4.1.2",
+    "tslint": "^5.9.1",
+    "tslint-config-airbnb": "^5.8.0",
     "typescript": "^2.8.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run prepare"
+    }
   }
 }
