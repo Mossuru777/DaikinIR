@@ -135,7 +135,7 @@ end remote`;
             const cs_bits = sprintf("%08b", DaikinIR.calcChecksum(frames[i]));
             for (let j = 7; j >= 0; j -= 1) {
                 commands += this.buildLIRCCommandFromIssueCommands([
-                    cs_bits[i] === "1" ? DaikinIR.LIRC_ONE : DaikinIR.LIRC_ZERO
+                    cs_bits[j] === "1" ? DaikinIR.LIRC_ONE : DaikinIR.LIRC_ZERO
                 ]);
             }
 
