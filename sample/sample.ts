@@ -117,5 +117,3 @@ function getCommandBits(command: DaikinIR): string {
 
     return command_bits;
 }
-
-
