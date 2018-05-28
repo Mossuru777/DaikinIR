@@ -1,21 +1,19 @@
 {
   "name": "daikin-ir",
-  "version": "0.0.4",
+  "version": "0.0.5",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build:main": "tsc",
-    "clean:main": "del-cli dist",
-    "lint:main": "tslint --fix --format stylish --project .",
-    "build:sample": "tsc --project sample",
-    "clean:sample": "del-cli sample/dist",
-    "lint:sample": "tslint --fix --format stylish --project sample",
-    "sample": "node sample/dist/sample/sample.js",
-    "prepare": "npm-run-all -p clean:* -p lint:* -s build:*"
-  },
   "author": "Mossuru777",
   "license": "ISC",
-  "private": true,
+  "homepage": "https://github.com/Mossuru777/DaikinIR",
+  "bugs": {
+    "url": "https://github.com/Mossuru777/DaikinIR/issues"
+  },
+  "repository": "https://github.com/Mossuru777/DaikinIR.git",
+  "engines": {
+    "node": ">=8.9.0"
+  },
   "dependencies": {
     "sprintf-js": "^1.1.1"
   },
@@ -33,5 +31,15 @@
     "hooks": {
       "pre-commit": "npm run prepare"
     }
+  },
+  "scripts": {
+    "build:main": "tsc",
+    "clean:main": "del-cli dist",
+    "lint:main": "tslint --fix --format stylish --project .",
+    "build:sample": "tsc --project sample",
+    "clean:sample": "del-cli sample/dist",
+    "lint:sample": "tslint --fix --format stylish --project sample",
+    "sample": "node sample/dist/sample/sample.js",
+    "prepare": "npm-run-all -p clean:* -p lint:* -s build:*"
   }
 }
