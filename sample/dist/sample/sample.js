@@ -12,11 +12,11 @@ console.log("[Frames]");
 console.log(getCommandBits(command));
 console.log("");
 console.log("[LIRC Configuration File Output]");
-console.log("Path: " + outputPath);
+console.log(`Path: ${outputPath}`);
 fs.writeFileSync(outputPath, command.getLIRCConfig());
 function getCommandConf(command) {
     let conf = "";
-    conf += "Power: " + (command.power === 1 ? "On" : "Off") + "\n";
+    conf += `Power: ${command.power === 1 ? "On" : "Off"}\n`;
     conf += "Mode: ";
     switch (command.mode) {
         case 0:
@@ -35,7 +35,7 @@ function getCommandConf(command) {
             conf += "Fan";
     }
     conf += "\n";
-    conf += "Temperature: " + command.temperature + "\n";
+    conf += `Temperature: ${command.temperature}\n`;
     conf += "FanSpeed: ";
     switch (command.fan_speed) {
         case 3:
@@ -61,18 +61,18 @@ function getCommandConf(command) {
             break;
     }
     conf += "\n";
-    conf += "Swing: " + (command.swing === 15 ? "On" : "Off") + "\n";
-    conf += "Powerful: " + (command.powerful ? "On" : "Off") + "\n";
+    conf += `Swing: ${command.swing === 15 ? "On" : "Off"}\n`;
+    conf += `Powerful: ${command.powerful ? "On" : "Off"}\n`;
     conf += "Timer: ";
     switch (command.timer_mode) {
         case 0:
             conf += "None";
             break;
         case 2:
-            conf += "OnTimer - " + command.on_timer + "hour later";
+            conf += `OnTimer - ${command.on_timer}hour later`;
             break;
         case 1:
-            conf += "OffTimer - " + command.off_timer + "hour later";
+            conf += `OffTimer - ${command.off_timer}hour later`;
             break;
     }
     return conf;
@@ -81,7 +81,7 @@ function getCommandBits(command) {
     let command_bits = "";
     const frames = command.getFrames();
     for (let i = 0; i < frames.length; i += 1) {
-        command_bits += "Frame " + (i + 1).toString() + ": ";
+        command_bits += `Frame ${i + 1}: `;
         for (let j = 0; j < frames[i].length; j += 1) {
             const bits = sprintf_js_1.sprintf("%08b", frames[i][j]);
             for (let k = 7; k >= 0; k -= 1) {
@@ -91,7 +91,7 @@ function getCommandBits(command) {
                 command_bits += " ";
             }
         }
-        command_bits += " (" + frames[i].length * 8 + " bits / " + frames[i].length.toString() + " bytes)";
+        command_bits += ` (${frames[i].length * 8} bits / ${frames[i].length} bytes)`;
         if (i < frames.length - 1) {
             command_bits += "\n";
         }
