@@ -28,23 +28,23 @@ export declare class DaikinIR {
     private row_issued_count;
     constructor(power: DaikinIR.Enums.Power, mode: DaikinIR.Enums.Mode, temperature: number, fan_speed: DaikinIR.Enums.FanSpeed, swing: DaikinIR.Enums.Swing, powerful: boolean, timer_mode: DaikinIR.Enums.TimerMode, hour: number);
     getLIRCConfig(): string;
-    private buildLIRCCommandFromIssueCommands(issue_commands);
-    private buildLIRCCommandsFromFrames(frames);
+    private buildLIRCCommandFromIssueCommands;
+    private buildLIRCCommandsFromFrames;
     getFrames(): number[][];
-    private static calcChecksum(frame);
-    private static timeToBytes(hour, split_bits);
+    private static calcChecksum;
+    private static timeToBytes;
 }
 export declare namespace DaikinIR.Enums {
     const enum Power {
         Off = 0,
-        On = 1,
+        On = 1
     }
     const enum Mode {
         Auto = 0,
         Dry = 2,
         Cold = 3,
         Warm = 4,
-        Fan = 6,
+        Fan = 6
     }
     const enum FanSpeed {
         Level1 = 3,
@@ -53,15 +53,15 @@ export declare namespace DaikinIR.Enums {
         Level4 = 6,
         Level5 = 7,
         Auto = 10,
-        Silent = 11,
+        Silent = 11
     }
     const enum Swing {
         Off = 0,
-        On = 15,
+        On = 15
     }
     const enum TimerMode {
         None = 0,
         Off = 1,
-        On = 2,
+        On = 2
     }
 }

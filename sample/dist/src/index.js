@@ -26,7 +26,7 @@ ${DaikinIR.LIRC_INDENT_SPACE}name  AirCon
 ${DaikinIR.LIRC_INDENT_SPACE}flags RAW_CODES
 ${DaikinIR.LIRC_INDENT_SPACE}eps 30
 ${DaikinIR.LIRC_INDENT_SPACE}aeps 100
-${DaikinIR.LIRC_INDENT_SPACE}gap 0
+${DaikinIR.LIRC_INDENT_SPACE}gap 1
 ${DaikinIR.LIRC_INDENT_SPACE}begin raw_codes
 ${DaikinIR.LIRC_INDENT_SPACE}${DaikinIR.LIRC_INDENT_SPACE}name Control
 ${initial_commands}${frames_commands}
