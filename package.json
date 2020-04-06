@@ -1,6 +1,6 @@
 {
   "name": "daikin-ir",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,14 +18,14 @@
     "sprintf-js": "^1.1.2"
   },
   "devDependencies": {
-    "@types/node": "^12.0.5",
+    "@types/node": "^13.11.0",
     "@types/sprintf-js": "^1.1.2",
-    "del-cli": "^2.0.0",
-    "husky": "^2.4.0",
+    "del-cli": "^3.0.0",
+    "husky": "^4.2.3",
     "npm-run-all": "^4.1.5",
-    "tslint": "^5.17.0",
-    "tslint-config-airbnb": "^5.11.1",
-    "typescript": "^3.5.1"
+    "tslint": "^6.1.1",
+    "tslint-config-airbnb": "^5.11.2",
+    "typescript": "^3.8.3"
   },
   "husky": {
     "hooks": {

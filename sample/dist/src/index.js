@@ -164,6 +164,7 @@ end remote`;
         return [(2 ** split_bits - 1) & little_endian_minutes, little_endian_minutes >> split_bits];
     }
 }
+exports.DaikinIR = DaikinIR;
 DaikinIR.IR_INITIAL_FRAME_SEPARATE_SPACE = "25375";
 DaikinIR.IR_FRAME_START_END_PULSE = "3450";
 DaikinIR.IR_FRAME_START_SPACE = "1750";
@@ -197,7 +198,6 @@ DaikinIR.LIRC_ONE = [
     DaikinIR.IR_BIT_SEPARATOR_PULSE,
     DaikinIR.IR_BIT_ONE_SPACE
 ];
-exports.DaikinIR = DaikinIR;
 (function (DaikinIR) {
     var Enums;
     (function (Enums) {
