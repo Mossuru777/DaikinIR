@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DaikinIR = void 0;
 const sprintf_js_1 = require("sprintf-js");
 class DaikinIR {
     constructor(power, mode, temperature, fan_speed, swing, powerful, timer_mode, hour) {
